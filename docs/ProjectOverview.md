@@ -22,3 +22,8 @@ Repos/Services (GitHub/GitLab/Bitbucket, CI/CD, etc.):
     GitHub
 Testing tools: 
     Google Chrome Mobile Simulator - responsive testing tool
+
+# High-Level System Overview
+    The Inventory Asset Tracking System for Mindoro State University Main Campus is a centralized, automated platform designed to manage physical assets—such as equipment, furniture, electronics, vehicles, and supplies—throughout their lifecycle. Its main purpose is to provide real-time visibility, accurate tracking, and efficient control of inventory, ensuring that assets are properly assigned, maintained, and audited.
+    Target users include the Supply and Property Services Office, university administrators, department heads, and IT personnel. The system offers significant benefits such as enhanced accountability, reduced asset loss, streamlined maintenance scheduling, and improved compliance with institutional and regulatory standards. With robust security, scalability, and usability features, it supports high performance under load, ensures data integrity, and enables seamless integration with other university systems—ultimately driving operational efficiency and long-term cost savings.
+
