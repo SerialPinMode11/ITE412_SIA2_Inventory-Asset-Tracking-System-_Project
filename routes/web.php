@@ -5,6 +5,10 @@ use App\Http\Controllers\AuthenticateController;
 use App\Http\Controllers\Access\SupplierAccessController;
 use App\Http\Controllers\Access\InspectorateAccessController;
 use App\Http\Controllers\Admin\PhysicalAssetController;
+use App\Http\Controllers\User\RequisitionerController;
+use App\Http\Controllers\Admin\RequisitionManagementController;
+use App\Http\Controllers\Admin\ProcurementController;
+use App\Http\Controllers\Viewer\SupplyHeadController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,14 +49,32 @@ Route::prefix('supplier-portal')->name('supplier.po.')->group(function () {
 
 // New Public Access Routes (from the modal)
 // We change the static view to the controller's index
-Route::get('/access/inspectorate', [InspectorateAccessController::class, 'index'])->name('access.inspectorate.index'); 
+Route::get('/access/inspectorate/pending', [InspectorateAccessController::class, 'view_pending'])->name('access.inspectorate.pending'); 
+Route::get('/access/inspectorate', [InspectorateAccessController::class, 'index'])->name('access.inspectorate.index');
+Route::get('/access/inspectorate/form/{purchaseOrder}', [InspectorateAccessController::class, 'createReport'])->name('access.inspectorate.create');
+Route::post('/report/create/{purchaseOrder} ', [InspectorateAccessController::class, 'storeReport'])->name('access.inspectorate.store');
+Route::get('/access/inspectorate/create-pending', [InspectorateAccessController::class, 'createPending'])->name('access.inspectorate.create_pending');
+Route::post('/access/inspectorate/store-pending', [InspectorateAccessController::class, 'storePending'])->name('access.inspectorate.store_pending');
+Route::get('/access/inspectorate/successful', [InspectorateAccessController::class, 'view_successful'])->name('access.inspectorate.successful');
 
-// NEW: Inspectorate Report Submission Routes (Public)
-Route::prefix('inspectorate-portal')->name('access.inspectorate.')->group(function () {
-    // Index is handled above, but we define the other actions
-    Route::get('/report/create/{purchaseOrder}', [InspectorateAccessController::class, 'createReport'])->name('create');
-    Route::post('/report/store/{purchaseOrder}', [InspectorateAccessController::class, 'storeReport'])->name('store');
-});
+
+
+// // NEW: Inspectorate Report Submission Routes (Public)
+// Route::prefix('inspectorate-portal')->name('access.inspectorate.')->group(function () {
+//      // 1. Landing Page (The initial page with the feature cards) - Name: access.inspectorate.index
+//     Route::get('/', [InspectorateAccessController::class, 'index'])->name('index'); 
+
+//     // 2. Pending Deliveries List - Name: access.inspectorate.pending
+//     Route::get('/pending', [InspectorateAccessController::class, 'view_pending'])->name('pending');
+
+//     // 3. Create Report Form (Receives the PO to inspect) - Name: access.inspectorate.create
+//     // This route MUST receive the PurchaseOrder model (Route Model Binding)
+//     Route::get('/report/create/{purchaseOrder}', [InspectorateAccessController::class, 'createReport'])->name('create');
+
+//     // 4. Store Report Submission - Name: access.inspectorate.store
+//     // This route MUST receive the PurchaseOrder model to link the report
+//     Route::post('/report/store/{purchaseOrder}', [InspectorateAccessController::class, 'storeReport'])->name('store');
+// });
 
 
 
@@ -71,8 +93,13 @@ Route::middleware('auth')->group(function () {
     // Logout
     Route::post('/logout', [AuthenticateController::class, 'logout'])->name('logout');
 
-    // 🧍‍♂️ User Dashboard
+    // 🧍‍♂️ User Dashboard Pages
     Route::view('/dashboard', 'user.dashboard')->name('user.dashboard');
+
+    // Asset Request Routes
+    Route::get('/requests', [RequisitionerController::class, 'index'])->name('user.requests.index');
+    Route::get('/requests/create', [RequisitionerController::class, 'create'])->name('user.requests.create');
+    Route::post('/requests', [RequisitionerController::class, 'store'])->name('user.requests.store');
 
     // 🧑‍💼 Admin-only pages
     // The admin routes use simple group without prefix/name to keep the names explicitly defined
@@ -92,10 +119,25 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/inventory/{inventory}/edit', [PhysicalAssetController::class, 'edit'])->name('admin.inventory.edit');
         Route::put('/admin/inventory/{inventory}', [PhysicalAssetController::class, 'update'])->name('admin.inventory.update');
         Route::delete('/admin/inventory/{inventory}', [PhysicalAssetController::class, 'destroy'])->name('admin.inventory.destroy');
+
+        // Requisition Management Routes
+        Route::get('/admin/requests', [RequisitionManagementController::class, 'index'])->name('admin.requests.index');
+        Route::get('/admin/requests/{request}', [RequisitionManagementController::class, 'show'])->name('admin.requests.show');
+        Route::put('/admin/requests/{assetRequest}', [RequisitionManagementController::class, 'update'])->name('admin.requests.update');
+
+        // 3. Procurement Management Routes (ProcurementController)
+Route::get('/admin/procurement', [ProcurementController::class, 'index'])->name('admin.procurement.index');
+// FIX: Changed parameter name from {purchaseOrder} to {report} to match the model InspectionReport
+Route::post('/admin/procurement/{report}/accept', [ProcurementController::class, 'acceptStock'])->name('admin.procurement.acceptStock'); 
+Route::post('/admin/procurement/{report}/dispose', [ProcurementController::class, 'disposeCancel'])->name('admin.procurement.disposeCancel');
+    
     });
 
     // 👀 Viewer pages
     Route::middleware('role:viewer')->group(function () {
         Route::view('/viewer/report', 'viewer.report')->name('viewer.report');
+
+         // FIX: Update from static view to controller method
+    Route::get('/viewer/report', [SupplyHeadController::class, 'overallReport'])->name('viewer.report');
     });
 });

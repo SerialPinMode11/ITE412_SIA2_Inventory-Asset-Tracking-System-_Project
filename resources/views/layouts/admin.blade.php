@@ -71,11 +71,11 @@
                 <i class="fas fa-boxes"></i> <span>Inventory</span>
             </a>
 
-            <a href="#" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
+            <a href="{{ route('admin.requests.index') }}" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
                 <i class="fas fa-clipboard-check"></i> <span>Requisitions</span>
             </a>
 
-            <a href="#" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
+            <a href="{{ route('admin.procurement.index') }}" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
                 <i class="fas fa-truck"></i> <span>Procurement</span>
             </a>
 

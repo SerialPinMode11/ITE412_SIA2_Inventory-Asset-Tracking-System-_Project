@@ -66,12 +66,12 @@
             </a>
             
             {{-- Example New Link: Create Request --}}
-            <a href="#" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
+            <a href="{{ route('user.requests.create') }}" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
                 <i class="fas fa-plus-circle"></i> <span>New Request</span>
             </a>
 
             {{-- Example New Link: My Requests --}}
-            <a href="#" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
+            <a href="{{ route('user.requests.index') }}" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
                 <i class="fas fa-clipboard-list"></i> <span>My Requests</span>
             </a>
 

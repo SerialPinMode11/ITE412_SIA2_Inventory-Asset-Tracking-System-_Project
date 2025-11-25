@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,8 +20,8 @@
                 <i class="fas fa-clipboard-check text-teal-600"></i>
                 <span>MinSU Inspectorate: Pending Deliveries</span>
             </h1>
-            <a href="{{ url('/') }}" class="inline-flex items-center space-x-2 px-4 py-2 bg-minsu-gold text-minsu-green font-semibold rounded-full hover:bg-yellow-400 transition duration-300">
-                <i class="fas fa-home"></i> <span>Back to Home</span>
+            <a href="{{ url('/access/inspectorate') }}" class="inline-flex items-center space-x-2 px-4 py-2 bg-minsu-gold text-minsu-green font-semibold rounded-full hover:bg-yellow-400 transition duration-300">
+                <i class="fas fa-home"></i> <span>Back to Inspectorate Dahbaord</span>
             </a>
         </div>
         

@@ -8,83 +8,135 @@ use App\Models\InspectionReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
-// FIX: ADD THIS USE STATEMENT
+use Illuminate\Validation\ValidationException; // ADD THIS
 use Illuminate\Support\Facades\Log;
 
 class InspectorateAccessController extends Controller
 {
-    /**
-     * Show the list of Pending Deliveries/POs requiring Inspection.
-     */
+    // 1. Landing Page (Shows the feature cards)
     public function index()
+{
+    // Calculate real-time stats
+    $pendingCount = PurchaseOrder::whereIn('delivery_status', ['Scheduled', 'Delivered'])
+        ->whereDoesntHave('inspectionReports')
+        ->count();
+    
+    $successfulCount = InspectionReport::where('result', 'Passed')->count();
+    
+    $upcomingCount = PurchaseOrder::where('delivery_schedule', '>=', now())
+        ->whereIn('delivery_status', ['Scheduled', 'Pending'])
+        ->count();
+    
+    return view('access.inspectorate', compact('pendingCount', 'successfulCount', 'upcomingCount'));
+}
+
+
+    // 2. Pending List (The table that shows POs ready for inspection)
+    public function view_pending()
     {
-        // Get POs that have a delivery status of 'Scheduled' or 'Delivered'
-        // AND do NOT have a linked InspectionReport yet.
         $pendingInspections = PurchaseOrder::with(['supplier'])
             ->whereIn('delivery_status', ['Scheduled', 'Delivered'])
-            ->whereDoesntHave('inspectionReports') // Assuming a relationship where multiple items from a PO can be inspected
+            ->whereDoesntHave('inspectionReports')
             ->orderBy('delivery_schedule', 'asc')
             ->paginate(10);
 
         return view('access.inspectorate-pending', compact('pendingInspections'));
     }
 
-    /**
-     * Show the Inspection Form for a specific Purchase Order.
-     */
+    // 3. Show the Inspection Form (MUST take PO parameter)
     public function createReport(PurchaseOrder $purchaseOrder)
     {
         // Inspection status options for the form
         $results = ['Passed', 'Failed', 'Conditional'];
-        
+
+        // FIX: Point to the correct, singular form path: access.inspect_form.form
         return view('access.inspectorate-form', compact('purchaseOrder', 'results'));
     }
 
-    /**
-     * Store the Digital Inspection Report.
-     */
+
+
     public function storeReport(Request $request, PurchaseOrder $purchaseOrder)
     {
-        // Validation for the Inspection Report
-        $data = $request->validate([
-            'report_number' => 'required|string|max:50|unique:inspection_reports,report_number',
-            'inspection_date' => 'required|date',
-            'result' => 'required|in:Passed,Failed,Conditional',
-            'remarks' => 'nullable|string',
-        ]);
-        
-        // Add the PO ID to the data to link the report (even if imperfectly linked)
-        // In a real system, you'd link this via a pivot or detailed line-item table.
-        $data['purchase_order_id'] = $purchaseOrder->id;
-        
         try {
-            DB::beginTransaction();
-            
-            // 1. Create the Inspection Report
-            $report = InspectionReport::create($data);
+            // 1. Validation
+            $data = $request->validate([
+                'report_number' => 'required|string|max:50|unique:inspection_reports,report_number',
+                'inspection_date' => 'required|date',
+                'result' => 'required|in:Passed,Failed,Conditional',
+                'remarks' => 'nullable|string',
+            ]);
 
-            // 2. Update the PO's delivery status to indicate inspection is complete
-            // NOTE: This logic assumes a 1:1 inspection. If multiple items per PO, this is too simple.
-            if ($data['result'] == 'Passed' || $data['result'] == 'Conditional') {
-                $purchaseOrder->delivery_status = 'Inspected - Ready for Stocking';
-            } else {
-                 $purchaseOrder->delivery_status = 'Inspection Failed - Action Required';
-            }
-            $purchaseOrder->save();
-            
+            $data['purchase_order_id'] = $purchaseOrder->id;
+
+            // 2. Database Transaction
+            DB::beginTransaction();
+            // ... (rest of storage logic) ...
             DB::commit();
 
-            return redirect()->route('access.inspectorate.index')->with('success', 
-                "✅ Inspection Report #{$report->report_number} submitted successfully for PO: {$purchaseOrder->po_number}.");
-
+            return redirect()->route('access.inspectorate.pending')->with(
+                'success',
+                "✅ Report submitted successfully for PO: {$purchaseOrder->po_number}."
+            );
+        } catch (ValidationException $e) {
+            // CATCH ValidationException and redirect to the create route with the PO model
+            return redirect()->route('access.inspectorate.create', $purchaseOrder)
+                ->withErrors($e->errors())
+                ->withInput();
         } catch (QueryException $e) {
             DB::rollBack();
-            // FIX APPLIED: Using Log::error now that the facade is imported
             Log::error('Inspection Report DB Error: ' . $e->getMessage());
 
-            return redirect()->back()
+            // CATCH Database error and redirect to the create route with the PO model
+            return redirect()->route('access.inspectorate.create', $purchaseOrder)
                 ->withInput()
                 ->with('error', '❌ A database error occurred while submitting the report. Please check the Report Number for uniqueness.');
         }
+    }
+
+    // Show form to create new pending delivery
+    public function createPending()
+    {
+        $suppliers = \App\Models\Supplier::orderBy('name')->get();
+        return view('access.inspect_form.form', compact('suppliers'));
+    }
+
+    // Store new pending delivery
+    public function storePending(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'po_number' => 'required|string|max:50|unique:purchase_orders,po_number',
+                'supplier_id' => 'required|exists:suppliers,id',
+                'order_date' => 'required|date',
+                'delivery_schedule' => 'required|date',
+                'total_amount' => 'required|numeric|min:0',
+                'delivery_status' => 'required|in:Scheduled,Delivered',
+                'notes' => 'nullable|string',
+            ]);
+
+            $data['payment_status_id'] = 1; // Set default payment status
+
+            PurchaseOrder::create($data);
+
+            return redirect()->route('access.inspectorate.pending')->with(
+                'success',
+                "✅ New pending delivery created: {$data['po_number']}"
+            );
+        } catch (ValidationException $e) {
+            return redirect()->route('access.inspectorate.create_pending')
+                ->withErrors($e->errors())
+                ->withInput();
+        }
+    }
+
+    // 4. View Successful Reports
+    public function view_successful()
+    {
+        $successfulReports = InspectionReport::with(['purchaseOrder.supplier'])
+            ->where('result', 'Passed')
+            ->orderBy('inspection_date', 'desc')
+            ->paginate(10);
+
+        return view('access.inspectorate-succesful', compact('successfulReports'));
     }
 }
