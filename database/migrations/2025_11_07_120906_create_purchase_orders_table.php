@@ -24,6 +24,9 @@ return new class extends Migration
             $table->foreignId('payment_status_id')->constrained('payment_statuses')->onDelete('restrict');
             $table->text('notes')->nullable();
             $table->timestamps();
+            
+            
+
         });
     }
 

@@ -3,22 +3,34 @@
 @section('title', 'Admin Panel')
 
 @section('content')
-<div class="container py-4">
-    <h2 class="fw-bold text-danger">Welcome, Administrator!</h2>
-    <p>You are logged in as <strong>{{ Auth::user()->role }}</strong>.</p>
 
-    <div class="p-3 mt-3 border border-danger rounded bg-light">
-        <p>This is the central <strong>Administration Panel</strong>.</p>
-        <p class="fw-bold text-danger">You have full system access. Proceed with caution.</p>
-        <hr>
-        <a href="{{ route('logout') }}" 
-           onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
-           class="btn btn-outline-danger">
-            Logout
-        </a>
-        <form id="logout-form" method="POST" action="{{ route('logout') }}" class="d-none">
-            @csrf
-        </form>
+<!-- Main Container -->
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    
+
+    <!-- 2. WELCOME CARD (The White Area) -->
+    <div class="bg-white shadow-xl rounded-xl overflow-hidden">
+        
+        <!-- Header Section of Card -->
+        <div class="px-6 py-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">
+                    Welcome, Administrator!
+                </h2>
+                <p class="text-sm text-gray-500">Central Administration Panel</p>
+            </div>
+            <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                System Active
+            </span>
+        </div>
+
+        <!-- Body Content -->
+        <div class="p-6">
+            <div class="text-gray-700">
+                You are logged in as an <span class="font-semibold">Administrator</span>. From this panel, you can manage physical asset inventory, oversee tracking asset, and monitor inspectorate activity. Use the navigation menu to access different administrative functions.
+            </div>
+        </div>
     </div>
 </div>
+
 @endsection

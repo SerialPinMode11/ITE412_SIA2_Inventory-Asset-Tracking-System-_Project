@@ -9,6 +9,8 @@ use App\Http\Controllers\User\RequisitionerController;
 use App\Http\Controllers\Admin\RequisitionManagementController;
 use App\Http\Controllers\Admin\ProcurementController;
 use App\Http\Controllers\Viewer\SupplyHeadController;
+use App\Http\Controllers\Viewer\TrackerCustodianController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -49,7 +51,7 @@ Route::prefix('supplier-portal')->name('supplier.po.')->group(function () {
 
 // New Public Access Routes (from the modal)
 // We change the static view to the controller's index
-Route::get('/access/inspectorate/pending', [InspectorateAccessController::class, 'view_pending'])->name('access.inspectorate.pending'); 
+Route::get('/access/inspectorate/pending', [InspectorateAccessController::class, 'view_pending'])->name('access.inspectorate.pending');
 Route::get('/access/inspectorate', [InspectorateAccessController::class, 'index'])->name('access.inspectorate.index');
 Route::get('/access/inspectorate/form/{purchaseOrder}', [InspectorateAccessController::class, 'createReport'])->name('access.inspectorate.create');
 Route::post('/report/create/{purchaseOrder} ', [InspectorateAccessController::class, 'storeReport'])->name('access.inspectorate.store');
@@ -82,7 +84,7 @@ Route::get('/access/inspectorate/successful', [InspectorateAccessController::cla
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthenticateController::class, 'registerForm'])->name('register.form');
     Route::post('/register', [AuthenticateController::class, 'register'])->name('register.submit');
-    
+
     Route::get('/login', [AuthenticateController::class, 'loginForm'])->name('login.form');
     Route::post('/login', [AuthenticateController::class, 'login'])->name('login.submit');
 });
@@ -109,16 +111,20 @@ Route::middleware('auth')->group(function () {
         // Inventory Routes (Explicitly named and URI prefixed)
         // 2. Inventory Index
         Route::get('/admin/inventory', [PhysicalAssetController::class, 'index'])->name('admin.inventory.index');
-        
+
         // 3. Explicit CRUD Routes
         Route::get('/admin/inventory/create', [PhysicalAssetController::class, 'create'])->name('admin.inventory.create');
         Route::post('/admin/inventory', [PhysicalAssetController::class, 'store'])->name('admin.inventory.store');
-        
+
         // {inventory} is the route model binding variable name used by the controller
         Route::get('/admin/inventory/{inventory}', [PhysicalAssetController::class, 'show'])->name('admin.inventory.show');
         Route::get('/admin/inventory/{inventory}/edit', [PhysicalAssetController::class, 'edit'])->name('admin.inventory.edit');
         Route::put('/admin/inventory/{inventory}', [PhysicalAssetController::class, 'update'])->name('admin.inventory.update');
         Route::delete('/admin/inventory/{inventory}', [PhysicalAssetController::class, 'destroy'])->name('admin.inventory.destroy');
+
+        //QRCode Generation Route
+        Route::get('/admin/inventory/{inventory}/qr-code', [PhysicalAssetController::class, 'generateQrCode'])->name('admin.inventory.qr-code');
+        // Route::get('/admin/inventory/{inventory}', [PhysicalAssetController::class, 'toGenerate'])->name('admin.inventory.qr-code-G');
 
         // Requisition Management Routes
         Route::get('/admin/requests', [RequisitionManagementController::class, 'index'])->name('admin.requests.index');
@@ -126,18 +132,18 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/requests/{assetRequest}', [RequisitionManagementController::class, 'update'])->name('admin.requests.update');
 
         // 3. Procurement Management Routes (ProcurementController)
-Route::get('/admin/procurement', [ProcurementController::class, 'index'])->name('admin.procurement.index');
-// FIX: Changed parameter name from {purchaseOrder} to {report} to match the model InspectionReport
-Route::post('/admin/procurement/{report}/accept', [ProcurementController::class, 'acceptStock'])->name('admin.procurement.acceptStock'); 
-Route::post('/admin/procurement/{report}/dispose', [ProcurementController::class, 'disposeCancel'])->name('admin.procurement.disposeCancel');
-    
+        Route::get('/admin/procurement', [ProcurementController::class, 'index'])->name('admin.procurement.index');
+        // FIX: Changed parameter name from {purchaseOrder} to {report} to match the model InspectionReport
+        Route::post('/admin/procurement/{report}/accept', [ProcurementController::class, 'acceptStock'])->name('admin.procurement.acceptStock');
+        Route::post('/admin/procurement/{report}/dispose', [ProcurementController::class, 'disposeCancel'])->name('admin.procurement.disposeCancel');
     });
 
     // 👀 Viewer pages
     Route::middleware('role:viewer')->group(function () {
         Route::view('/viewer/report', 'viewer.report')->name('viewer.report');
 
-         // FIX: Update from static view to controller method
-    Route::get('/viewer/report', [SupplyHeadController::class, 'overallReport'])->name('viewer.report');
+        // FIX: Update from static view to controller method
+        Route::get('/viewer/report', [SupplyHeadController::class, 'overallReport'])->name('viewer.report');
+        Route::get('/viewer/tracker', [TrackerCustodianController::class, 'index'])->name('viewer.tracker');
     });
 });

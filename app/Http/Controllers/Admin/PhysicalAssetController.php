@@ -10,6 +10,8 @@ use App\Models\Location;
 use App\Models\Employee;
 use App\Models\InspectionReport;
 use Illuminate\Http\Request;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Intervention\Image\Facades\Image;
 
 // ADDED THESE NECESSARY USE STATEMENTS:
 use Illuminate\Support\Facades\DB;
@@ -79,15 +81,14 @@ class PhysicalAssetController extends Controller
             DB::beginTransaction(); // Start a database transaction
 
             PhysicalAsset::create($data);
-            
+
             DB::commit(); // Commit the transaction on success
 
             // SUCCESS RESPONSE
             return redirect()->route('admin.inventory.index')->with('success', '✅ Asset created successfully! Tag: ' . $data['asset_tag']);
-
         } catch (QueryException $e) {
             DB::rollBack(); // Rollback on error
-            
+
             // Log the detailed error for the developer
             Log::error('Database Error during Asset Creation by Admin ' . (Auth::id() ?? 'N/A') . ': ' . $e->getMessage());
 
@@ -95,10 +96,9 @@ class PhysicalAssetController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->with('error', '❌ Database Error: Could not save the asset due to a system issue. Please contact support.');
-            
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             // Catch any other unexpected exceptions
             Log::error('Unexpected Error during Asset Creation by Admin ' . (Auth::id() ?? 'N/A') . ': ' . $e->getMessage());
 
@@ -166,9 +166,8 @@ class PhysicalAssetController extends Controller
             $inventory->update($data);
 
             DB::commit();
-            
-            return redirect()->route('admin.inventory.index')->with('success', '✅ Asset updated successfully! Tag: ' . $inventory->asset_tag);
 
+            return redirect()->route('admin.inventory.index')->with('success', '✅ Asset updated successfully! Tag: ' . $inventory->asset_tag);
         } catch (QueryException $e) {
             DB::rollBack();
             Log::error('Database Error during Asset Update by Admin ' . (Auth::id() ?? 'N/A') . ': ' . $e->getMessage());
@@ -176,7 +175,6 @@ class PhysicalAssetController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->with('error', '❌ Database Error: Could not update the asset. Please contact support.');
-            
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Unexpected Error during Asset Update by Admin ' . (Auth::id() ?? 'N/A') . ': ' . $e->getMessage());
@@ -204,17 +202,52 @@ class PhysicalAssetController extends Controller
             return redirect()->route('admin.inventory.index')->with('success', '🗑️ Asset ' . $tag . ' deleted successfully.');
         } catch (QueryException $e) {
             DB::rollBack();
-            
+
             // Check for potential foreign key constraint violation
             if (str_contains($e->getMessage(), 'foreign key')) {
-                 return redirect()->back()
+                return redirect()->back()
                     ->with('error', '❌ Deletion Failed: Asset is currently referenced by other records (e.g., transfers). You must delete related records first.');
             }
-            
+
             Log::error('Database Error during Asset Deletion by Admin ' . (Auth::id() ?? 'N/A') . ': ' . $e->getMessage());
 
             return redirect()->back()
                 ->with('error', '❌ Database Error: Could not delete the asset. Please contact support.');
         }
+    }
+
+    // Generate QR Code for the specified asset
+
+    // public function toGenerate(PhysicalAsset $inventory){
+    //     return view('admin.inventory.qr-code');
+    // }
+
+    public function generateQrCode(PhysicalAsset $inventory)
+    {
+        $qrData = sprintf(
+            "Asset Tag: %s\nItem: %s\nCategory: %s\nCondition: %s\nStatus: %s\nLocation: %s\nCustodian: %s\nSerial: %s\nAcquired: %s\nCost: ₱%s\nSupplier: %s",
+            $inventory->asset_tag,
+            $inventory->item_name,
+            $inventory->category->name ?? 'N/A',
+            $inventory->condition,
+            $inventory->status,
+            $inventory->location->name ?? 'N/A',
+            $inventory->custodian->name ?? 'Unassigned',
+            $inventory->serial_number ?? 'N/A',
+            $inventory->date_acquired->format('F d, Y'),
+            number_format($inventory->acquisition_cost, 2),
+            $inventory->supplier->name ?? 'N/A'
+        );
+
+        // Generate QR Code as SVG (more reliable for displaying in images)
+        $qrCode = QrCode::format('svg')
+            ->size(300)
+            ->margin(1)
+            ->generate($qrData);
+
+        return view('admin.inventory.qr-code', [
+            'qrCode' => $qrCode,
+            'inventory' => $inventory,
+        ]);
     }
 }

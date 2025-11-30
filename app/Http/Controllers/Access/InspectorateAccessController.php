@@ -107,6 +107,7 @@ class InspectorateAccessController extends Controller
             $data = $request->validate([
                 'po_number' => 'required|string|max:50|unique:purchase_orders,po_number',
                 'supplier_id' => 'required|exists:suppliers,id',
+                'purchase_order_id' => 'nullable|exists:purchase_orders,id',
                 'order_date' => 'required|date',
                 'delivery_schedule' => 'required|date',
                 'total_amount' => 'required|numeric|min:0',

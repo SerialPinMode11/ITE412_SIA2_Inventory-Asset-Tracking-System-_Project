@@ -5,7 +5,38 @@
 @section('content')
 <div class="py-4">
     <h2 class="text-3xl font-bold text-minsu-green mb-6">Final Asset Acquisition Report (For Supply Head)</h2>
-    <p class="text-gray-600 mb-4">This report shows all Purchase Orders that have been successfully acquired, inspected, and stocked (Final Disposition: Transferred to Head).</p>
+    <p class="text-gray-600 mb-8">This report shows all Purchase Orders that have been successfully acquired, inspected, and stocked (Final Disposition: Transferred to Head).</p>
+    
+    {{-- Added summary stats cards for total cost and number of successful reports --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {{-- Overall Acquisition Cost Card --}}
+        <div class="bg-gradient-to-br from-supply-head-main to-green-700 rounded-xl shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-green-100 mb-1">Total Acquisition Cost</p>
+                    <p class="text-4xl font-bold">₱{{ number_format($fulfilledPOs->sum('total_amount'), 2) }}</p>
+                </div>
+                <div class="text-6xl opacity-20">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+            </div>
+            <p class="text-sm text-green-100 mt-3">Across all fulfilled purchase orders</p>
+        </div>
+
+        {{-- Successful Reports Card --}}
+        <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-blue-100 mb-1">Successful Reports</p>
+                    <p class="text-4xl font-bold">{{ $fulfilledPOs->count() }}</p>
+                </div>
+                <div class="text-6xl opacity-20">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <p class="text-sm text-blue-100 mt-3">Purchase Orders completed</p>
+        </div>
+    </div>
     
     <div class="bg-white shadow-lg rounded-xl overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">

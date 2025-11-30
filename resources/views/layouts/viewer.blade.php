@@ -63,15 +63,15 @@
             {{-- Navigation Links (Reporting/Review duties) --}}
             
             <a href="{{ route('viewer.report') }}" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
-                <i class="fas fa-chart-bar"></i> <span>Overall Report</span>
+                <i class="fas fa-chart-bar"></i> <span>Dashboard</span>
             </a>
             
-            <a href="#" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
+            <a href="{{route ('viewer.tracker')}}" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
                 <i class="fas fa-search"></i> <span>Asset Tracking</span>
             </a>
 
             <a href="#" class="nav-link px-3 py-2 text-white font-medium flex items-center space-x-2">
-                <i class="fas fa-handshake"></i> <span>Transfer Records</span>
+                <i class="fas fa-handshake"></i> <span>Asset Disposal</span>
             </a>
 
             {{-- Logout Form --}}

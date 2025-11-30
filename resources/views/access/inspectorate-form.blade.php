@@ -58,6 +58,14 @@
                         @error('inspection_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
+                    
+                    <div>
+                        <label for="purchase_order_id" class="block text-sm font-medium text-gray-700">Order ID <span class="text-red-500">*</span></label>
+                        <input type="text" name="purchase_order_id" id="purchase_order_id" value="{{ old('purchase_order_id') }}" required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-minsu-green focus:border-minsu-green">
+                        @error('purchase_order_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
                     <div class="md:col-span-2">
                         <label for="result" class="block text-sm font-medium text-gray-700">Inspection Result <span class="text-red-500">*</span></label>
                         <select name="result" id="result" required

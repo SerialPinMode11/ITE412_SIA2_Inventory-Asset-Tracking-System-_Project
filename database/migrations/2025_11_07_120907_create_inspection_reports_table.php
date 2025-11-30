@@ -22,6 +22,7 @@ return new class extends Migration
             
             $table->text('remarks')->nullable(); // Add remarks column
             $table->timestamps();
+            
         });
     }
 
